@@ -64,7 +64,6 @@ class Game:
 
         self.font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 14)
 
-   self.game_clear = False
         self.game_over = False
 
         self.init_game()
@@ -74,7 +73,7 @@ class Game:
         self.calculate_beside_bombs()
 
     def place_bombs(self):
-        for _ in range(1): # 폭탄 갯수
+        for _ in range(40): # 폭탄 갯수
             while True:
                 x, y = random.randint(0, 15), random.randint(0, 15)
                 if self.board[y][x] == 0:
@@ -146,7 +145,8 @@ class Game:
             for x in range(16):
                 if self.board[y][x] != 9 and not self.displayed[y][x]:
                     return
-   self.game_clear = True
+        self.disp.image(self.images["clear"])
+        time.sleep(10000)
 
     def run(self):
         self.disp.image(self.images["main"])
@@ -181,10 +181,6 @@ class Game:
             self.process_command(command)
             self.draw()
             time.sleep(0.1)
-
-   # 게임 클리어일 때
-   while self.game_clear:
-       self.disp.image(self.images["clear"])
 
         # 게임 오버일 때
         while self.game_over:
