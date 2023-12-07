@@ -65,8 +65,8 @@ class Game:
 
         self.font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 14)
 
-        self.game_over = False
-        self.game_clear = False
+        self.game_over = False  # 게임 오버 상태
+        self.game_clear = False  # 게임 클리어 상태
 
         self.init_game()
 
@@ -79,24 +79,26 @@ class Game:
     def place_bombs(self):
         for _ in range(40): # 폭탄 갯수
             while True:
-                x, y = random.randint(0, 15), random.randint(0, 15)
-                if self.board[y][x] == 0:
-                    self.board[y][x] = 9
+                x, y = random.randint(0, 15), random.randint(0, 15)  # 랜덤한 좌표에 폭탄을 배치하기 위해 0부터 15까지의 랜덤한 좌표를 선택
+                if self.board[y][x] == 0:  # 해당 좌표에 이미 폭탄이 없는 경우에만 폭탄을 배치
+                    self.board[y][x] = 9  # 선택된 좌표에 폭탄을 나타내는 숫자 9를 배치
                     break
 
     # 주변 폭탄 갯수 계산
     def calculate_beside_bombs(self):
         for y in range(16):
             for x in range(16):
-                if self.board[y][x] == 9:
+                if self.board[y][x] == 9:  # 만약 현재 셀이 폭탄이 있는 곳이라면 건너뜀
                     continue
-                count = 0
+                count = 0  # 현재 셀 주변의 폭탄 수를 저장하는 변수
                 for dx in [-1, 0, 1]:
                     for dy in [-1, 0, 1]:
-                        nx, ny = x + dx, y + dy
-                        if 0 <= nx < 16 and 0 <= ny < 16 and self.board[ny][nx] == 9:
-                            count += 1
-                self.board[y][x] = count
+                        nx, ny = x + dx, y + dy  # 주변 셀의 좌표를 계산
+
+                        # 주변 셀이 게임 보드 범위 안에 있고, 폭탄이 있는 경우에만 폭탄 수를 증가
+                        if 0 <= nx < 16 and 0 <= ny < 16 and self.board[ny][nx] == 9:  
+                            count += 1  # 주변에 폭탄이 있으면 폭탄 수를 증가
+                self.board[y][x] = count  # 현재 셀에 주변 폭탄 수를 할당 / 폭탄이 없는 경우에는 해당 셀의 주변에 있는 폭탄 수가 들어감
 
     # 게임 상황을 화면에 보여주기
     def draw(self):
@@ -120,11 +122,12 @@ class Game:
                         draw.rectangle([x*15, y*15, x*15+14, y*15+14], fill="#808080")
                         draw.text(((x*15)+((15-w)/2), (y*15)+((15-h)/2)), text, font=self.font, fill="#FFFFFF")
                    
-                elif self.flags[y][x]:
+                elif self.flags[y][x]:  # 깃발 이미지
                     image.paste(self.images["flag"], (x*15, y*15))
 
                 draw.rectangle([x*15, y*15, x*15+14, y*15+14], outline="#808080")
 
+        #  커서 위치는 테두리를 빨간색으로 표시
         draw.rectangle([self.cursor[0]*15, self.cursor[1]*15, self.cursor[0]*15+14, self.cursor[1]*15+14], outline="#FF0000")
 
         self.disp.image(image)
@@ -160,7 +163,6 @@ class Game:
                 if self.board[y][x] != 9 and not self.displayed[y][x]:  # 폭탄이 아니면서 아직 열리지 않은 셀이 있는지 확인
                     return
                 
-        time.sleep(2)
         self.game_clear = True
 
     # 게임 실행
@@ -198,15 +200,17 @@ class Game:
             self.draw()
 
             time.sleep(0.1)
-
-        # 게임 끝났을 때
-        while self.game_over:
-            self.disp.image(self.images["failed"])
             
     def process_command(self, command):
-        if self.game_over:  # 게임 상태가 종료이면 아무런 명령도 처리하지 않음
+        if self.game_over:  # 게임 상태가 종료이면 게임 상태에 해당하는 이미지를 띄우고 아무런 명령도 처리하지 않음
+            while self.game_over:
+                self.disp.image(self.images["failed"])
             return
+        
         if self.game_clear:
+            while self.game_clear:
+                time.sleep(2)
+                self.disp.image(self.images["clear"])
             return
         
         if command['move']:
@@ -215,8 +219,6 @@ class Game:
         if command['A_pressed']:
             self.open(self.cursor[0], self.cursor[1])
             self.check_clear()
-            while self.game_clear:
-                self.disp.image(self.images["clear"])
                 
         if command['B_pressed']:
             self.flags[self.cursor[1]][self.cursor[0]] ^= 1
